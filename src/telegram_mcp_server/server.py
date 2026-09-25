@@ -508,6 +508,8 @@ async def save_draft(chat: Any, text: str) -> dict[str, Any]:
     client = await _get_client()
     entity = await _resolve_entity(client, chat)
     draft = await client.get_drafts(entity)
+    if draft is None:
+        raise TelegramMCPError(f"no draft object returned for chat {chat!r}")
     await draft.set_message(text or "")
     return {
         "draft_saved": bool(text and text.strip()),

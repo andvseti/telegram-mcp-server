@@ -58,6 +58,8 @@ Nach dem Registrieren eine neue Claude-Code-Session starten, damit der Server er
 | `get_recent_media(chat, limit, kind?, dest_dir?)` | Letzte N Medien eines Chats laden |
 | `send_message(chat, text)` | Textnachricht senden |
 | `send_file(chat, file_path, caption?)` | Datei/Bild senden |
+| `save_draft(chat, text)` | Nachricht als **Entwurf** im Chat speichern (leerer Text = Entwurf löschen) |
+| `clear_draft(chat)` | Gespeicherten Entwurf im Chat entfernen |
 
 `chat` akzeptiert Chat-id, `@username` oder (Teil-)Titel; bei mehrdeutigem Titel
 kommt ein Fehler mit den Treffern statt einer Rate-Auflösung.
@@ -65,6 +67,12 @@ kommt ein Fehler mit den Treffern statt einer Rate-Auflösung.
 `get_messages`/`search_messages` liefern pro Nachricht auch `chat_id` mit —
 Treffer aus der globalen Suche sind damit direkt in weiteren Tool-Aufrufen
 (z.B. `download_media`) verwendbar.
+
+Entwurf-Text supports Telethon-Markdown: `**bold**`, `__italic__`,
+`inline code`, ` ```code blocks``` `, `[link](url)`. Einzelne `*Sterne*`
+für Kursiv werden NICHT geparst. Der Entwurf erscheint (mit „Entwurf“-Label
+in der Chatliste) auf allen Clients des eingeloggten Accounts und überschreibt
+eine vorhandene Entwurf im selben Chat.
 
 ## Entwicklung / Tests
 
@@ -86,6 +94,9 @@ Tests laufen ohne Live-Account (Client wird gemockt).
 #    - search_messages query="..."    -> globale Suche (übt _search_global live aus;
 #                                         Treffer müssen chat_id tragen)
 #    - get_recent_media chat=<id> kind="photo" -> lädt Fotos nach $TELEGRAM_DOWNLOAD_DIR
+#    - save_draft chat=<id> text="Test" -> Entwurf erscheint im Chat (und als
+#                                         „Entwurf“-Label in der Chatliste);
+#                                         clear_draft chat=<id> räumt wieder auf
 ```
 Erster echter Integrationstest = ein Medienabruf aus einer deiner Gruppen. Die globale `search_messages`
 (ohne `chat`) ist der einzige Pfad, der `_search_global`/`SearchGlobalRequest` real ausführt —
