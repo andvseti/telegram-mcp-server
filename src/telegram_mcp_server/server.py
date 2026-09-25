@@ -486,6 +486,55 @@ async def send_file(chat: Any, file_path: str, caption: Optional[str] = None) ->
     return {"sent": True, "message_id": sent.id}
 
 
+@mcp.tool()
+async def save_draft(chat: Any, text: str) -> dict[str, Any]:
+    """Save a message draft in a chat without sending it.
+
+    The draft appears in the target chat as an unsent message (and as a
+    "Draft" label in the chat list) for the logged-in account, on all its
+    clients. It overwrites any existing draft in that chat.
+
+    Text formatting (Telethon markdown):
+        **bold**, __italic__, `inline code`,
+        ```code blocks```, [link text](https://url), plain unicode bullets.
+        Note: single *asterisk* italics are NOT parsed — use __underscores__.
+
+    Args:
+        chat: Chat id (preferred), @username or exact title.
+        text: Draft text; empty string clears the draft.
+
+    Returns {"draft_saved": bool, "chat": <title>, "cleared": bool}.
+    """
+    client = await _get_client()
+    entity = await _resolve_entity(client, chat)
+    draft = await client.get_drafts(entity)
+    await draft.set_message(text or "")
+    return {
+        "draft_saved": bool(text and text.strip()),
+        "chat": getattr(entity, "title", None) or getattr(entity, "username", None),
+        "cleared": not (text and text.strip()),
+    }
+
+
+@mcp.tool()
+async def clear_draft(chat: Any) -> dict[str, Any]:
+    """Clear (remove) a previously saved draft in a chat.
+
+    Args:
+        chat: Chat id/@username/title.
+
+    Returns {"draft_cleared": True, "chat": <title>}.
+    """
+    client = await _get_client()
+    entity = await _resolve_entity(client, chat)
+    draft = await client.get_drafts(entity)
+    await draft.delete()
+    return {
+        "draft_cleared": True,
+        "chat": getattr(entity, "title", None) or getattr(entity, "username", None),
+    }
+
+
 def main() -> None:
     """Entry point: run the MCP server over stdio."""
     mcp.run()
